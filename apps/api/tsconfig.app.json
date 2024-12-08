@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["node", "express"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/models/repository.model.ts",
+    "src/models/user.model.ts",
+    "src/models/user-repo.model.ts",
+    "src/models/user-repo-version.model.ts"
+  ],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
