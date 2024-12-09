@@ -29,6 +29,7 @@ type Repository {
   description: String!
   id: Float!
   name: String!
+  releases: [RepoVersion!]!
   seen: Boolean!
   url: String!
 }

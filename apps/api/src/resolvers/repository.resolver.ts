@@ -18,11 +18,30 @@ export class RepositoryResolver {
         include: [
           {
             model: Repository,
+            include: [{ model: RepoVersion, attributes: ['id'] }],
           },
         ],
       });
+      const userRepoVersions = (
+        await UserRepoVersions.findAll({
+          where: { userId },
+        })
+      ).map((userRepoVersion) => userRepoVersion.dataValues.repoVersionId);
 
-      return userRepos.map((userRepo) => userRepo.repo);
+      const res = userRepos.map((userRepo) => ({
+        ...userRepo.repo,
+        releases: userRepo.dataValues.releases?.map((release) => ({
+          ...release,
+          seen: userRepoVersions.includes(release.id),
+        })),
+      }));
+
+      return res.map((item) => ({
+        ...item.dataValues,
+        description: item.dataValues.description || '',
+
+        seen: item.dataValues.releases.every((release) => release.seen),
+      }));
     } catch (error) {
       handleErrors(error);
     }

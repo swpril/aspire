@@ -1,12 +1,14 @@
 import {
   AutoIncrement,
   Column,
+  HasMany,
   Model,
   PrimaryKey,
   Table,
   Unique,
 } from 'sequelize-typescript';
 import { Field, ObjectType } from 'type-graphql';
+import { RepoVersion } from './repo-version.model';
 
 @ObjectType()
 @Table
@@ -32,4 +34,8 @@ export class Repository extends Model {
 
   @Field()
   public seen: boolean;
+
+  @Field(() => [RepoVersion])
+  @HasMany(() => RepoVersion)
+  public releases: RepoVersion;
 }

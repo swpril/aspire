@@ -61,6 +61,9 @@ function RepoList({ onSelectRepo, selectedRepo }: RepoListProps) {
             {repos.map((repo: IRepo) => {
               return (
                 <li key={repo.name} className={`relative mb-2`}>
+                  {!repo.seen && (
+                    <span className="animate-pulse h-[10px] w-[10px] block rounded-full border border-red-400 bg-red-400 absolute top-0 right-0"></span>
+                  )}
                   <button
                     onClick={() => onSelectRepo(repo)}
                     className={`w-full rounded text-left px-4 py-3 hover:bg-blue-500 hover:text-white transition-colors active:text-white ${

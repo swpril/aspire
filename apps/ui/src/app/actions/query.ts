@@ -7,6 +7,7 @@ export const GET_REPOSITORIES = gql`
       name
       url
       description
+      seen
     }
   }
 `;

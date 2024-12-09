@@ -4,6 +4,7 @@ export interface IRepo {
   name: string;
   releases: IRepoVersion[];
   url: string;
+  seen: boolean;
 }
 
 export interface IRepoVersion {
