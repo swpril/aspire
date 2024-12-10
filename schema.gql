@@ -4,15 +4,16 @@
 # -----------------------------------------------
 
 type Mutation {
-  createRepo(url: String!): Boolean!
-  createUser(username: String!): User!
+  createRepo(url: String!, userId: Float!): Boolean!
   markSeen(repoVersionId: Float!, userId: Float!): Boolean!
   refetchReleases(repoId: Float!): Boolean!
 }
 
 type Query {
-  getReleases(repoId: Float!): [RepoVersion!]!
+  getReleases(repoId: Float!, userId: Float!): [RepoVersion!]!
   repositories(userId: Float!): [Repository!]!
+  verify: Boolean!
+  verifyUser(code: String!): UserType!
 }
 
 type RepoVersion {
@@ -34,7 +35,8 @@ type Repository {
   url: String!
 }
 
-type User {
+type UserType {
   id: Float!
+  jwtToken: String!
   username: String!
 }

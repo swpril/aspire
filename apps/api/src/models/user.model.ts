@@ -4,6 +4,7 @@ import {
   Model,
   PrimaryKey,
   Table,
+  Unique,
 } from 'sequelize-typescript';
 import { Field, ObjectType } from 'type-graphql';
 
@@ -14,9 +15,22 @@ export class User extends Model {
   @PrimaryKey
   @AutoIncrement
   @Column
-  public id!: number;
+  public id: number;
 
   @Field()
+  @Unique
   @Column
-  public username!: string;
+  public username: string;
+}
+
+@ObjectType()
+export class UserType {
+  @Field()
+  public jwtToken: string;
+
+  @Field()
+  public id: number;
+
+  @Field()
+  public username: string;
 }

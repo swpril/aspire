@@ -1,9 +1,10 @@
 import { useQuery } from '@apollo/client';
-import { DEFAULT_USER_ID } from '@shared/constants';
+import { STORAGE_KEYS } from '@shared/constants';
 import Fuse from 'fuse.js';
 import { memo, useState } from 'react';
 import { GET_REPOSITORIES } from '../../actions/query';
 import { IRepo } from '../../interfaces/repo';
+import { getDefaultContext } from '../../utils';
 import Loader from '../Loader';
 
 interface RepoListProps {
@@ -14,10 +15,13 @@ interface RepoListProps {
 function RepoList({ onSelectRepo, selectedRepo }: RepoListProps) {
   const [repos, setRepos] = useState<IRepo[]>([]);
   const [search, setSearch] = useState('');
-  const { data, loading } = useQuery(GET_REPOSITORIES, {
+  const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '');
+
+  const { data, loading, refetch } = useQuery(GET_REPOSITORIES, {
     variables: {
-      userId: DEFAULT_USER_ID,
+      userId: user.id,
     },
+    ...getDefaultContext(),
     onCompleted: (data) => {
       setRepos(data.repositories);
     },
@@ -34,7 +38,16 @@ function RepoList({ onSelectRepo, selectedRepo }: RepoListProps) {
 
   return (
     <div className="bg-white rounded-lg overflow-hidden border">
-      <h2 className="text-xl font-semibold p-4 bg-white">Repositories</h2>
+      <div className="flex items-center justify-between p-4">
+        <h2 className="text-xl font-semibold bg-white">Repositories</h2>
+        <button
+          disabled={loading}
+          onClick={() => refetch()}
+          className="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50"
+        >
+          Refresh List
+        </button>
+      </div>
       <div className="px-4 py-3">
         <input
           className="flex-grow w-full px-1 py-1 bg-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -60,14 +73,17 @@ function RepoList({ onSelectRepo, selectedRepo }: RepoListProps) {
           <ul>
             {repos.map((repo: IRepo) => {
               return (
-                <li key={repo.name} className={`relative mb-2`}>
+                <li
+                  key={repo.name}
+                  className={`relative mb-2 border rounded mx-4 mt-2`}
+                >
                   {!repo.seen && (
-                    <span className="animate-pulse h-[10px] w-[10px] block rounded-full border border-red-400 bg-red-400 absolute top-0 right-0"></span>
+                    <span className="animate-ping h-[8px] w-[8px] block rounded-full border border-orange-600 bg-orange-600 absolute top-[-2px] right-[-2px]"></span>
                   )}
                   <button
                     onClick={() => onSelectRepo(repo)}
                     className={`w-full rounded text-left px-4 py-3 hover:bg-blue-500 hover:text-white transition-colors active:text-white ${
-                      selectedRepo && selectedRepo.name === repo.name
+                      selectedRepo && selectedRepo.id === repo.id
                         ? 'bg-blue-500 text-white hover:bg-blue-600'
                         : ''
                     }`}
@@ -96,5 +112,7 @@ function RepoList({ onSelectRepo, selectedRepo }: RepoListProps) {
 
 export default memo(
   RepoList,
-  (prev, next) => prev.onSelectRepo === next.onSelectRepo
+  (prev, next) =>
+    prev.onSelectRepo === next.onSelectRepo &&
+    prev.selectedRepo?.id === next.selectedRepo?.id
 );
