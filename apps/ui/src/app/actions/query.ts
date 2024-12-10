@@ -13,8 +13,8 @@ export const GET_REPOSITORIES = gql`
 `;
 
 export const GET_REPO_RELEASES = gql`
-  query getReleases($repoId: Float!) {
-    getReleases(repoId: $repoId) {
+  query getReleases($repoId: Float!, $userId: Float!) {
+    getReleases(repoId: $repoId, userId: $userId) {
       releaseDate
       id
       repoId
@@ -23,5 +23,11 @@ export const GET_REPO_RELEASES = gql`
       version
       versionId
     }
+  }
+`;
+
+export const VERIFY = gql`
+  query verify {
+    verify
   }
 `;

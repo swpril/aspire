@@ -8,6 +8,7 @@ import { buildSchema } from 'type-graphql';
 import { statusCodes } from './config/const.config';
 import sequelize from './config/db.config';
 import { RepositoryResolver, UserResolver } from './resolvers';
+
 dotenv.config();
 
 async function main() {
@@ -17,11 +18,9 @@ async function main() {
     validate: false,
   });
 
-  // apollo server configuration
   const server = new ApolloServer({
     schema,
     formatError: (error: any) => {
-      // Access the error code from the extensions field
       return {
         status: error.extensions.status
           ? error.extensions.status
@@ -38,10 +37,12 @@ async function main() {
   await sequelize.sync();
   // await sequelize.sync({ force: true });
 
-  // express configuration
   const app = express();
+  app.use(cors());
+  app.use(express.json());
+
   app.use(
-    '/',
+    '/graphql',
     cors<cors.CorsRequest>(),
     express.json(),
     expressMiddleware(server, {

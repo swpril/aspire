@@ -4,20 +4,27 @@ import Markdown from 'react-markdown';
 import { MARK_SEEN } from '../../actions/mutation';
 import { GET_REPO_RELEASES } from '../../actions/query';
 import { IRepoVersion } from '../../interfaces/repo';
-import { DEFAULT_USER_ID } from '@shared/constants';
+import { getDefaultContext } from '../../utils';
 import Loader from '../Loader';
+import { Eye } from 'lucide-react';
+import { STORAGE_KEYS } from '@shared/constants';
 
 const ReleaseCard: React.FC<{ repoId: number; url: string }> = ({
   repoId,
   url,
 }) => {
+  const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '');
   const { data, loading, refetch } = useQuery(GET_REPO_RELEASES, {
     variables: {
       repoId,
+      userId: user.id,
     },
+    ...getDefaultContext(),
   });
 
-  const [markSeen, { loading: isLoading }] = useMutation(MARK_SEEN);
+  const [markSeen, { loading: isLoading }] = useMutation(MARK_SEEN, {
+    ...getDefaultContext(),
+  });
 
   if (loading) {
     return <Loader />;
@@ -49,8 +56,8 @@ const ReleaseCard: React.FC<{ repoId: number; url: string }> = ({
                   {release.version}
                 </a>
                 {release.seen ? (
-                  <span className="px-4 cursor-not-allowed text-green-400 rounded border border-green-400">
-                    Seen
+                  <span className="flex justify-center items-center gap-2 px-4 cursor-not-allowed text-green-400 rounded border border-green-400">
+                    <Eye size={20} /> Seen
                   </span>
                 ) : (
                   <button
@@ -58,15 +65,15 @@ const ReleaseCard: React.FC<{ repoId: number; url: string }> = ({
                     onClick={async () => {
                       await markSeen({
                         variables: {
-                          userId: DEFAULT_USER_ID,
+                          userId: user.id,
                           repoVersionId: release.id,
                         },
                       });
                       await refetch();
                     }}
-                    className="px-4 cursor-pointer text-red-400 border border-red-400 rounded"
+                    className="flex justify-center items-center gap-2 px-4 cursor-pointer text-red-400 border border-red-400 rounded"
                   >
-                    Mark Seen
+                    <Eye size={20} /> Mark Seen
                   </button>
                 )}
               </div>

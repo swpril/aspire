@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { REFRESH_RELEASES } from '../../actions/mutation';
 import { GET_REPO_RELEASES } from '../../actions/query';
 import { IRepo } from '../../interfaces/repo';
+import { getDefaultContext } from '../../utils';
 import ReleaseCard from '../ReleaseCard';
 
 function RepoDetails({ info }: { info: IRepo }) {
@@ -10,6 +11,7 @@ function RepoDetails({ info }: { info: IRepo }) {
     REFRESH_RELEASES,
     {
       refetchQueries: [GET_REPO_RELEASES],
+      ...getDefaultContext(),
     }
   );
   return (
@@ -36,7 +38,7 @@ function RepoDetails({ info }: { info: IRepo }) {
           </button>
         </div>
 
-        <div className="h-[calc(100vh-300px)] overflow-y-auto">
+        <div className="h-[calc(100vh-320px)] overflow-y-auto overflow-x-hidden">
           <ReleaseCard repoId={info.id} url={info.url} />
         </div>
       </div>

@@ -1,9 +1,10 @@
 import { ApolloServerErrorCode } from '@apollo/server/errors';
-import { DEFAULT_USER_ID, GITHUB_REPO_URL_REGEX } from '@shared/constants';
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
+import { GITHUB_REPO_URL_REGEX } from '@shared/constants';
+import { Arg, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
 import sequelize from '../config/db.config';
 import BadRequestException from '../exceptions/BadRequestException';
 import { gitAxios } from '../github-api';
+import { authMiddleware } from '../middleware';
 import { RepoVersion, Repository, UserRepo, UserRepoVersions } from '../models';
 import { getUsernameAndRepo } from '../util/github';
 import { handleErrors } from '../util/handlers.util';
@@ -11,6 +12,7 @@ import { handleErrors } from '../util/handlers.util';
 @Resolver(() => Repository)
 export class RepositoryResolver {
   @Query(() => [Repository])
+  @UseMiddleware(authMiddleware)
   async repositories(@Arg('userId') userId: number): Promise<Repository[]> {
     try {
       const userRepos = await UserRepo.findAll({
@@ -48,7 +50,11 @@ export class RepositoryResolver {
   }
 
   @Mutation(() => Boolean)
-  async createRepo(@Arg('url') url: string): Promise<boolean> {
+  @UseMiddleware(authMiddleware)
+  async createRepo(
+    @Arg('url') url: string,
+    @Arg('userId') userId: number
+  ): Promise<boolean> {
     if (!GITHUB_REPO_URL_REGEX.test(url)) {
       throw new BadRequestException(
         'Invalid github url',
@@ -60,13 +66,13 @@ export class RepositoryResolver {
       const repo = await Repository.findOne({ where: { url } });
       if (repo) {
         const existed = await UserRepo.findOne({
-          where: { userId: DEFAULT_USER_ID, repoId: repo.dataValues.id },
+          where: { userId, repoId: repo.dataValues.id },
         });
         if (existed) {
           return true;
         }
         await UserRepo.create({
-          userId: DEFAULT_USER_ID,
+          userId,
           repoId: repo.dataValues.id,
         });
         return true;
@@ -104,7 +110,7 @@ export class RepositoryResolver {
         Promise.all([
           RepoVersion.bulkCreate(releaseData, { transaction }),
           UserRepo.create(
-            { userId: DEFAULT_USER_ID, repoId: createdRepo.dataValues.id },
+            { userId, repoId: createdRepo.dataValues.id },
             { transaction }
           ),
         ])
@@ -116,6 +122,7 @@ export class RepositoryResolver {
     }
   }
 
+  @UseMiddleware(authMiddleware)
   @Mutation(() => Boolean)
   async refetchReleases(@Arg('repoId') repoId: number) {
     try {
@@ -149,6 +156,7 @@ export class RepositoryResolver {
     }
   }
 
+  @UseMiddleware(authMiddleware)
   @Mutation(() => Boolean)
   async markSeen(
     @Arg('userId') userId: number,
@@ -167,8 +175,12 @@ export class RepositoryResolver {
     return false;
   }
 
+  @UseMiddleware(authMiddleware)
   @Query(() => [RepoVersion])
-  async getReleases(@Arg('repoId') repoId: number) {
+  async getReleases(
+    @Arg('repoId') repoId: number,
+    @Arg('userId') userId: number
+  ) {
     try {
       const [releases, userRepos] = await Promise.all([
         RepoVersion.findAll({
@@ -184,7 +196,7 @@ export class RepositoryResolver {
           order: [['releaseDate', 'DESC']],
         }),
         UserRepoVersions.findAll({
-          where: { userId: DEFAULT_USER_ID },
+          where: { userId },
         }),
       ]);
 
